@@ -115,6 +115,13 @@ class button(object):
         textBox.center = (self.xPos, self.yPos)
         pygame.draw.rect(gameWindow.display, self.normal_color, (position))
         gameWindow.display.blit(textSurface, textBox)
+
+
+class gamePiece(object):
+    def __init__(self):
+        self.gravity = False
+        self.collision = False
+        self.position = (0, 0)
         
         
 
