@@ -27,6 +27,8 @@ class game_Window(object):
         self.frameCount = 0
         self.clock = pygame.time.Clock()
         self.fps = 0
+        self.use_background_image = False
+        self.background_color = white
 
     def display(self):
         return self.display
@@ -40,45 +42,49 @@ class game_Window(object):
         self.caption = caption
         pygame.display.set_caption(caption)
 
-    def set_background(self, image):
+    def set_background_image(self, image):
+        self.use_background_image = True
         self.background = pygame.image.load(image)
         self.background = pygame.transform.scale(self.background, (self.width, self.height))
+
+    def set_background_color(self, color):
+        self.background_color = color
 
     def gameExit(self):
         print("exiting game")
         pygame.quit()
         sys.exit()
 
-    def frameUpdate(self):
+    def frameUpdate(self, scene):
         self.clock.tick()
         self.fps = self.clock.get_fps() 
         #print ("FPS: ", self.fps)
-        self.display.blit(self.background, (0, 0))
-        start_button.display()
-        collider.display()
-        player.display()
+        if scene == "Main":
+            if self.use_background_image:
+                self.display.blit(self.background, (0, 0))
+            else:
+                pygame.draw.rect(self.display, self.background_color, (0, 0, self.width, self.height))
+            collider.display()
+            player.display()
         pygame.display.update()
+
+
         
         
 
 class game_Action(object):
     def __init__(self):
         self.exit = False
+        self.scene = "Main"
+
+    def exit(self):
+        self.exit = True
 
     def gameLoop(self):
-        while self.exit == False:
-            gameWindow.frameUpdate()
-            player.collision(collider)
-            for event in pygame.event.get():
-                if event.type == KEYDOWN:
-                    print("Space key Pressed")
-                    collider.set_pos(200, 100)
-                if event.type == QUIT:
-                    gameWindow.gameExit()
-
-class game_Input(object):
-    def __init__(self):
-        self.blank = 0
+        while self.scene == "Main" and self.exit == False:
+            gameWindow.frameUpdate(self.scene)
+            mainLoop()
+        gameWindow.gameExit()
 
 
 class button(object):
@@ -173,6 +179,11 @@ class gamePiece(object):
         yMax = yPos + self.hb_height/2
         return (xMin, xMax, yMin, yMax)
 
+    def move_right(self, dist):
+        xPos = self.position[0] + dist
+        yPos = self.position[1]
+        self.position = (xPos, yPos)
+
     def get_triggered(self):
         return self.triggered
 
@@ -211,14 +222,25 @@ class gamePiece(object):
             disp_specs = ((xPos - (self.length/2)), (yPos - (self.height/2)), self.length, self.height)
             pygame.draw.rect(gameWindow.display, black, (disp_specs))
 
+def mainLoop():
+        player.collision(collider)
+        for event in pygame.event.get():
+            if event.type == KEYDOWN and event.key == pygame.K_SPACE:
+                print("Space key Pressed")
+                collider.set_pos(200, 100)
+            if event.type == KEYDOWN and event.key == pygame.K_d:
+                player.move_right(5)
+            if event.type == QUIT:
+                print ("Trying to quit")
+                gameAction.exit = True
+
+
 gameWindow = game_Window()
 gameAction = game_Action()
 
 gameWindow.set_res(500, 500)
 gameWindow.set_caption("Hello World")
-gameWindow.set_background("map_use.png")
-
-start_button = button("Start")
+gameWindow.set_background_color(green)
 
 player = gamePiece()
 player.set_pos(100, 100)
