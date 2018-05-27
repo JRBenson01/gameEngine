@@ -55,6 +55,8 @@ class game_Window(object):
         #print ("FPS: ", self.fps)
         self.display.blit(self.background, (0, 0))
         start_button.display()
+        collider.display()
+        player.display()
         pygame.display.update()
         
         
@@ -66,13 +68,17 @@ class game_Action(object):
     def gameLoop(self):
         while self.exit == False:
             gameWindow.frameUpdate()
+            player.collision(collider)
             for event in pygame.event.get():
+                if event.type == KEYDOWN:
+                    print("Space key Pressed")
+                    collider.set_pos(200, 100)
                 if event.type == QUIT:
                     gameWindow.gameExit()
-class UI(object):
+
+class game_Input(object):
     def __init__(self):
-        self.xPos = gameWindow.width/2
-        self.yPos = gameWindow.height/2
+        self.blank = 0
 
 
 class button(object):
@@ -107,24 +113,103 @@ class button(object):
     def set_text(self, text):
         self.text = text
 
+    def set_pos(self, xPos, yPos):
+        self.xPos = xPos
+        self.yPos = yPos
+
     def display(self):
-        position = ((self.xPos - (self.width/2)), (self.yPos - (self.height/2)), self.width, self.height)
-        print (position)
+        #print ("Displaying", text, "button")
+        disp_specs = ((self.xPos - (self.width/2)), (self.yPos - (self.height/2)), self.width, self.height)
+        #print (position)
         textSurface = self.font.render(self.text, True, black)
         textBox = textSurface.get_rect()
         textBox.center = (self.xPos, self.yPos)
-        pygame.draw.rect(gameWindow.display, self.normal_color, (position))
+        pygame.draw.rect(gameWindow.display, self.normal_color, (disp_specs))
         gameWindow.display.blit(textSurface, textBox)
 
 
 class gamePiece(object):
     def __init__(self):
         self.gravity = False
-        self.collision = False
+        self.collidable = False
         self.position = (0, 0)
-        
-        
+        self.length = 100
+        self.height = 100
+        self.hb_length = 100
+        self.hb_height = 100
+        self.triggered = False
+        self.use_image = False
+        self.sprite = ""
 
+    def set_pos(self, x, y):
+        self.position = (x, y)
+
+    def set_hitbox(self, length, height):
+        self.hb_length = length
+        self.hb_height = height
+
+    def set_hb(self, length, height):
+        self.hb_length = length
+        self.hb_height = height
+
+    def set_sprite(self, image):
+        self.use_image = True
+        self.sprite = ""
+        self.sprite = pygame.transform.scale(self.sprite, (self.length, self.height))
+        #self.background = pygame.transform.scale(self.background, (self.width, self.height))
+        
+    def set_size(self, length, height):
+        self.length = length
+        self.height = height
+        if self.use_image:
+            self.sprite = pygame.transform.scale(self.sprite, (self.length, self.height))
+
+    def get_hb(self):
+        xPos = self.position[0]
+        yPos = self.position[1]
+        xMin = xPos - self.hb_length/2
+        xMax = xPos + self.hb_length/2
+        yMin = yPos - self.hb_height/2
+        yMax = yPos + self.hb_height/2
+        return (xMin, xMax, yMin, yMax)
+
+    def get_triggered(self):
+        return self.triggered
+
+    def collision(self, collider):
+        xPos = self.position[0]
+        yPos = self.position[1]
+        xMin = xPos - self.hb_length/2
+        xMax = xPos + self.hb_length/2
+        yMin = yPos - self.hb_height/2
+        yMax = yPos + self.hb_height/2
+        collider_hb = collider.get_hb()
+        col_xMin = collider_hb[0]
+        col_xMax = collider_hb[1]
+        col_yMin = collider_hb[2]
+        col_yMax = collider_hb[3]
+        dim_hb = (xMin, xMax, yMin, yMax)
+        #print (dim_hb)
+        #print (collider_hb)
+        if (xMin <= collider_hb[0] and xMax >= collider_hb[1] and yMin <= collider_hb[2] and yMax >= collider_hb[3]):
+            self.triggered = True
+            print ("Collision detected")
+
+        elif (xMin <= collider_hb[1] and xMax >= collider_hb[0] and yMin <= collider_hb[3] and yMax >= collider_hb[2]):
+            self.triggered = True
+            print ("Collision detected")
+
+    def display(self):
+        #print ("Displaying gamePiece")
+        xPos = self.position[0]
+        yPos = self.position[1]
+        xMin = xPos - self.length/2
+        yMin = yPos - self.height/2
+        if self.use_image:
+            gameWindow.display.blit(self.sprite, (xMin, yMin))
+        else:
+            disp_specs = ((xPos - (self.length/2)), (yPos - (self.height/2)), self.length, self.height)
+            pygame.draw.rect(gameWindow.display, black, (disp_specs))
 
 gameWindow = game_Window()
 gameAction = game_Action()
@@ -135,5 +220,10 @@ gameWindow.set_background("map_use.png")
 
 start_button = button("Start")
 
-gameAction.gameLoop()
+player = gamePiece()
+player.set_pos(100, 100)
 
+collider = gamePiece()
+collider.set_pos(300, 100)
+
+gameAction.gameLoop()
