@@ -124,7 +124,7 @@ class button(object):
         self.trigger_color = magenta
         self.click_color = violet
         self.font_size = 22
-        self.font = pygame.font.Font("freesansbold.ttf", self.font_size)
+        self.font = pygame.font.Font("arial.ttf", self.font_size)
         self.width = 100
         self.height = 100
         self.xPos = gameWindow.width/2
@@ -138,7 +138,7 @@ class button(object):
 
     def set_font_size(self, size):
         self.font_size = size
-        self.font = pygame.font.Font("freesansbold.ttf", self.font_size)
+        self.font = pygame.font.Font("arial.ttf", self.font_size)
 
     def set_normal_color(self, color):
         self.normal_color = color
